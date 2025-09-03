@@ -1,0 +1,23 @@
+node_modules/
+.env
+.DS_Store
+
+# Package manager locks
+yarn.lock
+package-lock.json
+
+# Build and dist folders
+dist/
+build/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*

@@ -1,0 +1,63 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build outputs
+dist/
+build/
+
+# Logs
+logs/
+*.log
+
+# Coverage and test files
+.nyc_output/
+coverage/
+.coverage/
+.vitest/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+._*
+
+# Git and CI/CD
+.git/
+.gitignore
+.github/
+.husky/
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Documentation
+README.md
+CHANGELOG.md
+docs/
+
+# Package manager files
+package-lock.json
+yarn.lock
+
+# Temporary files
+tmp/
+temp/
