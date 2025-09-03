@@ -2,7 +2,7 @@
 
 ## Tecnologias
 
-### Banco de Dadosrnecidos
+### Banco de Dados fornecidos
 
 ### Setup Rápido Service
 
@@ -26,7 +26,7 @@ Este repositório contém um serviço central com **bugs intencionais** que voc�
 2. **Configure o ambiente** seguindo as instruções abaixo
 3. **Analise o código** e identifique problemas
 4. **Implemente testes** e correções
-5. **Documente seus achados** usando os templates fornecidos
+5. **Documente seus achados** usando os templates fornecidos, altere as informações dos templates com os sesus reviews. 
 
 ### ⚡ Setup Rápido
 
