@@ -1,4 +1,4 @@
-# Desafio de QA - Cent4. **Documente seus achados** usando os templates- Headers de seguran- Dependências (`package.json`)
+# Desafio de QA - **Documente seus achados** usando os templates- Headers de seguran- Dependências (`package.json`)
 
 ## Tecnologias
 
