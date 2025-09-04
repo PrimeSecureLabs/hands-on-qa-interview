@@ -72,7 +72,53 @@ sequelize
 
 ---
 
-## Bug #2: [TÍTULO DO BUG]
+## Bug #2: Configuração SSL Para Ambiente de Desenvolvimento
+
+**Severidade**: Alta
+**Categoria**: Funcional
+**Status**: Aberto
+
+### Descrição
+
+O Sequelize está configurado para usar SSL na conexão com PostgreSQL, mas o servidor de desenvolvimento local não suporta SSL. Isso causa falha na conexão com o banco de dados em ambiente de desenvolvimento.
+
+### Localização
+
+- **Arquivo**: `src/config/database.ts`
+- **Função/Linha**: Linhas 24-32
+
+### Passos para Reproduzir
+
+1. pnpm run dev
+2. [Passo 2]
+3. [Passo 3]
+
+### Resultado Esperado
+
+Conexão bem-sucedida com o banco PostgreSQL local em ambiente de desenvolvimento.
+
+### Resultado Atual
+
+Failed to connect to the database: ConnectionError [SequelizeConnectionError]: The server does not support SSL connections
+
+### Impacto
+
+Impossibilita a execução da aplicação em ambiente de desenvolvimento.
+
+### Correção Sugerida
+
+```typescript
+  dialectOptions: {
+    ssl: process.env.NODE_ENV === 'production' ? {
+      require: true,
+      rejectUnauthorized: false
+    } : false
+  },
+```
+
+---
+
+## Bug #3: [TÍTULO DO BUG]
 
 **Severidade**: [Alta/Média/Baixa]
 **Categoria**: [Segurança/Performance/Funcional/UX]
