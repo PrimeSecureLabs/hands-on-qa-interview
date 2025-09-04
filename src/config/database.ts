@@ -24,11 +24,12 @@ const sequelize = new Sequelize({
   username: process.env.DB_USER!,
   password: process.env.DB_PASSWORD!,
   logging: false,
+  // CORREÇÃO BUG 2: Adicionar configuração SSL para produção
   dialectOptions: {
-    ssl: {
+    ssl: process.env.NODE_ENV === 'production' ? {
       require: true,
-      rejectUnauthorized: false, // Use with caution in production
-    },
+      rejectUnauthorized: false
+    } : false
   },
 });
 

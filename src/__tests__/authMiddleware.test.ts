@@ -6,15 +6,21 @@ import jwt from 'jsonwebtoken';
 vi.mock('jsonwebtoken');
 vi.mock('../models/user/UserSession');
 
+/**
+ * O objetivo dessa suíte é verificar se o middleware de autenticação:
+ * - rejeita requisições sem cabeçalho de autorização;
+ * - rejeita cabeçalhos malformados ou tokens expirados;
+ * - aceita tokens válidos e injeta o usuário no request;
+ * - não expõe mensagens internas e resiste a ataques de JWT bombing.
+ */
 describe('Auth Middleware', () => {
   let req: any;
   let res: any;
   let next: any;
 
+  // Antes de cada teste, inicializamos requisição e resposta genéricas
   beforeEach(() => {
-    req = {
-      headers: {},
-    };
+    req = { headers: {} };
     res = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn(),
@@ -25,37 +31,89 @@ describe('Auth Middleware', () => {
 
   describe('Token Validation', () => {
     it('should reject requests without authorization header', async () => {
-      // TODO: Testar request sem header de authorization
-      expect(true).toBe(true);
+      // Não passando o header de autorização deve retornar 401
+      await authMiddleware(req as any, res as any, next as any);
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Token não fornecido' });
+      expect(next).not.toHaveBeenCalled();
     });
 
     it('should reject malformed authorization headers', async () => {
-      // TODO: Testar headers malformados
+      // Header "Bearer" sem token deve ser tratado como inválido
       req.headers.authorization = 'Bearer';
-
-      // TODO: Chamar o middleware e verificar o comportamento
-      expect(true).toBe(true);
+      // Simula verificação falhando ao decodificar o JWT
+      const verifyMock = vi.mocked(jwt.verify);
+      verifyMock.mockImplementation(() => {
+        throw new Error('invalid token');
+      });
+      await authMiddleware(req as any, res as any, next as any);
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Token inválido ou expirado' });
+      expect(next).not.toHaveBeenCalled();
     });
+
     it('should accept valid tokens', async () => {
-      // TODO: Testar tokens válidos
-      expect(true).toBe(true);
+      // Define um token válido no header
+      req.headers.authorization = 'Bearer validtoken';
+      // Mocka jwt.verify para retornar um payload decodificado
+      const verifyMock = vi.mocked(jwt.verify);
+      verifyMock.mockReturnValue({ id: 1, email: 'user@test.com' } as any);
+      // Mocka UserSession para retornar uma sessão ativa
+      const UserSessionModule: any = await import('../models/user/UserSession');
+      UserSessionModule.UserSession.findOne = vi.fn().mockResolvedValue({
+        id: 1,
+        user_id: 1,
+        is_active: true,
+      });
+      await authMiddleware(req as any, res as any, next as any);
+      // Não deve setar status nem json, apenas chamar o next
+      expect(res.status).not.toHaveBeenCalled();
+      // O usuário deve ser preenchido no request para uso posterior
+      expect(req.user).toEqual({ id: 1, email: 'user@test.com' });
+      expect(next).toHaveBeenCalledTimes(1);
     });
 
     it('should reject expired tokens', async () => {
-      // TODO: Testar tokens expirados
-      expect(true).toBe(true);
+      req.headers.authorization = 'Bearer expired';
+      // Simula erro de expiração
+      const verifyMock = vi.mocked(jwt.verify);
+      verifyMock.mockImplementation(() => {
+        throw new Error('jwt expired');
+      });
+      await authMiddleware(req as any, res as any, next as any);
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Token inválido ou expirado' });
+      expect(next).not.toHaveBeenCalled();
     });
   });
 
   describe('Security Tests', () => {
     it('should not expose sensitive information in error messages', async () => {
-      // TODO: Verificar se erros não vazam informações sensíveis
-      expect(true).toBe(true);
+      req.headers.authorization = 'Bearer invalid';
+      // Força um erro interno contendo palavra "secret"
+      const verifyMock = vi.mocked(jwt.verify);
+      verifyMock.mockImplementation(() => {
+        throw new Error('some internal secret error');
+      });
+      await authMiddleware(req as any, res as any, next as any);
+      const jsonArg = res.json.mock.calls[0]?.[0];
+      // A mensagem deve ser genérica e não conter termos sensíveis
+      expect(jsonArg).toEqual({ error: 'Token inválido ou expirado' });
+      expect(String(jsonArg).toLowerCase()).not.toContain('secret');
     });
 
     it('should handle JWT bombing attacks', async () => {
-      // TODO: Testar com tokens extremamente longos
-      expect(true).toBe(true);
+      // Simula um token extremamente longo (JWT bombing)
+      const longToken = 'Bearer ' + 'a'.repeat(5000);
+      req.headers.authorization = longToken;
+      const verifyMock = vi.mocked(jwt.verify);
+      verifyMock.mockImplementation(() => {
+        throw new Error('invalid token');
+      });
+      await authMiddleware(req as any, res as any, next as any);
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Token inválido ou expirado' });
+      expect(next).not.toHaveBeenCalled();
     });
   });
 });

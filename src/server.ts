@@ -18,6 +18,19 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ========================================
+// CORREÇÃO BUG 1: ÍNICIO
+// INICIALIZAÇÃO DOS MODELS
+// ========================================
+initUserSession(sequelize);
+initRole(sequelize);
+initUserRole(sequelize);
+initTeam(sequelize);
+initTeamMember(sequelize);
+initMember(sequelize);
+initTeamInvitation(sequelize);
+initUserAuthentication(sequelize);
+
+// ========================================
 // MIDDLEWARE PARA ROTEAMENTO ALB/ECS FARGATE
 // ========================================
 // Este middleware remove prefixos de serviço do path para permitir
@@ -52,12 +65,29 @@ function stripServicePrefix(
 // IMPORTANTE: Aplicar o middleware ANTES de definir qualquer rota
 app.use(stripServicePrefix);
 
-app.use(
-  cors({
-    origin: '*',
-    credentials: true,
-  })
-);
+
+// ========================================
+// CORREÇÃO BUG 3
+// CONFIGURAÇÃO DE CORS
+// ========================================
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',') 
+  : ['http://localhost:3000'];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Permitir requisições sem origem (mobile apps, curl, postman, etc)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'A política de CORS deste site não permite acesso a partir da origem especificada.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+  optionsSuccessStatus: 200
+}));
 
 app.use(
   express.json({
@@ -92,19 +122,15 @@ app.use('/users', userRoutes);
 app.use('/customers', customerRoutes);
 app.use('/teams', teamsRoute);
 
+// ========================================
+// CORREÇÃO BUG 1: FIM
+// CONEXÃO E SINCRONIZAÇÃO DO BANCO
+// ========================================
 sequelize
   .authenticate()
   .then(() => {
     console.log('Database connected');
-    // Inicializa os models
-    initUserSession(sequelize);
-    initRole(sequelize);
-    initUserRole(sequelize);
-    initTeam(sequelize);
-    initTeamMember(sequelize);
-    initMember(sequelize);
-    initTeamInvitation(sequelize);
-    initUserAuthentication(sequelize);
+    // Models já foram inicializados, agora apenas sync
     return sequelize.sync();
   })
   .then(() => {
