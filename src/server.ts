@@ -17,6 +17,16 @@ import { initUserAuthentication } from './models/user/UserAuthentication';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// CORREÇÃO: Inicializar todos os models ANTES de qualquer operação com o banco
+initUserSession(sequelize);
+initRole(sequelize);
+initUserRole(sequelize);
+initTeam(sequelize);
+initTeamMember(sequelize);
+initMember(sequelize);
+initTeamInvitation(sequelize);
+initUserAuthentication(sequelize);
+
 // ========================================
 // MIDDLEWARE PARA ROTEAMENTO ALB/ECS FARGATE
 // ========================================
@@ -92,19 +102,14 @@ app.use('/users', userRoutes);
 app.use('/customers', customerRoutes);
 app.use('/teams', teamsRoute);
 
+// ========================================
+// CONEXÃO E SINCRONIZAÇÃO DO BANCO
+// ========================================
 sequelize
   .authenticate()
   .then(() => {
     console.log('Database connected');
-    // Inicializa os models
-    initUserSession(sequelize);
-    initRole(sequelize);
-    initUserRole(sequelize);
-    initTeam(sequelize);
-    initTeamMember(sequelize);
-    initMember(sequelize);
-    initTeamInvitation(sequelize);
-    initUserAuthentication(sequelize);
+    // Models já foram inicializados, agora apenas sync
     return sequelize.sync();
   })
   .then(() => {
