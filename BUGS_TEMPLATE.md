@@ -118,7 +118,130 @@ Impossibilita a execução da aplicação em ambiente de desenvolvimento.
 
 ---
 
-## Bug #3: [TÍTULO DO BUG]
+## Bug #3: Configuração de CORS permissiva
+
+**Severidade**: Alta
+**Categoria**: Segurança
+**Status**: Aberto
+
+### Descrição
+
+A configuração de CORS permite origem `'*'` (qualquer domínio) enquanto também permite credenciais (`credentials: true`), o que é uma configuração insegura e contraditória. Isso expõe a API a ataques CSRF e vazamento de dados.
+
+### Localização
+
+- **Arquivo**: `src/server.ts`
+- **Função/Linha**: Linhas 65-70
+
+### Passos para Reproduzir
+
+1. Iniciar servidor: pnpm run dev
+2. Em outro terminal: curl -H "Origin: http://site-qualquer.com" http://localhost:3000/health -I
+
+### Resultado Esperado
+
+O servidor deveria rejeitar requisições de origens não autorizadas ou não permitir credenciais quando a origem é '*'.
+
+Por exemplo:
+
+HTTP/1.1 500 Internal Server Error
+X-Powered-By: Express
+Content-Security-Policy: default-src 'none'
+X-Content-Type-Options: nosniff
+Content-Type: text/html; charset=utf-8
+Content-Length: 1498
+Date: Thu, 04 Sep 2025 19:34:00 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+### Resultado Atual
+
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true
+Content-Type: application/json; charset=utf-8
+Content-Length: 174
+ETag: W/"ae-o1fYq/wK0L55tgttCEFNFhn5NA0"
+Date: Thu, 04 Sep 2025 19:16:38 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+### Impacto
+
+Essa configuração errada deixa a aplicação vulnerável, permitindo que sites maliciosos se passem por usuários legítimos e realizem ações sem autorização. Dados pessoais e senhas podem ser roubados e enviados para hackers, colocando em risco a privacidade de todos os usuários. Além disso, essa falha pode fazer com que a empresa tenha problemas com leis de proteção de dados, resultando em multas graves e perda de confiança dos clientes.
+
+### Correção Sugerida
+
+No .env:
+ALLOWED_ORIGINS=http://localhost:3000,http://dominioconfiavel.com
+
+No server.ts:
+```typescript
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',') 
+  : ['http://localhost:3000'];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Permitir requisições sem origem (mobile apps, curl, postman, etc)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'A política de CORS deste site não permite acesso a partir da origem especificada.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+  optionsSuccessStatus: 200
+}));
+```
+
+---
+
+## Bug #4: [TÍTULO DO BUG]
+
+**Severidade**: [Alta/Média/Baixa]
+**Categoria**: [Segurança/Performance/Funcional/UX]
+**Status**: Aberto
+
+### Descrição
+
+[Descreva o bug detalhadamente]
+
+### Localização
+
+- **Arquivo**: `src/caminho/arquivo.ts`
+- **Função/Linha**: [Se aplicável]
+
+### Passos para Reproduzir
+
+1. [Passo 1]
+2. [Passo 2]
+3. [Passo 3]
+
+### Resultado Esperado
+
+[O que deveria acontecer]
+
+### Resultado Atual
+
+[O que está acontecendo]
+
+### Impacto
+
+[Como isso afeta o usuário/sistema]
+
+### Correção Sugerida
+
+```typescript
+// Código sugerido para correção
+```
+
+---
+
+## Bug #5: [TÍTULO DO BUG]
 
 **Severidade**: [Alta/Média/Baixa]
 **Categoria**: [Segurança/Performance/Funcional/UX]

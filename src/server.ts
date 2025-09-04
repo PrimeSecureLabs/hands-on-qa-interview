@@ -17,7 +17,10 @@ import { initUserAuthentication } from './models/user/UserAuthentication';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CORREÇÃO: Inicializar todos os models ANTES de qualquer operação com o banco
+// ========================================
+// CORREÇÃO BUG 1: ÍNICIO
+// INICIALIZAÇÃO DOS MODELS
+// ========================================
 initUserSession(sequelize);
 initRole(sequelize);
 initUserRole(sequelize);
@@ -62,12 +65,29 @@ function stripServicePrefix(
 // IMPORTANTE: Aplicar o middleware ANTES de definir qualquer rota
 app.use(stripServicePrefix);
 
-app.use(
-  cors({
-    origin: '*',
-    credentials: true,
-  })
-);
+
+// ========================================
+// CORREÇÃO BUG 3
+// CONFIGURAÇÃO DE CORS
+// ========================================
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',') 
+  : ['http://localhost:3000'];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Permitir requisições sem origem (mobile apps, curl, postman, etc)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'A política de CORS deste site não permite acesso a partir da origem especificada.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+  optionsSuccessStatus: 200
+}));
 
 app.use(
   express.json({
@@ -103,6 +123,7 @@ app.use('/customers', customerRoutes);
 app.use('/teams', teamsRoute);
 
 // ========================================
+// CORREÇÃO BUG 1: FIM
 // CONEXÃO E SINCRONIZAÇÃO DO BANCO
 // ========================================
 sequelize
