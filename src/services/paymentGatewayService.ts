@@ -37,14 +37,16 @@ class PaymentGatewayService {
         affiliateLink: data.affiliateLink,
       });
 
+      // Corrigido: Timeout aumentado para um valor mais realista - BUG 6
+      const DEFAULT_TIMEOUT = Number(process.env.PAYMENT_TIMEOUT_MS) || 5000;
       const response = await axios.post(
         `${this.baseURL}/api/customers/register`,
         data,
         {
-          timeout: 100,
+          timeout: DEFAULT_TIMEOUT,
           headers: {
             'Content-Type': 'application/json',
-            'X-Internal-Secret': process.env.SECRET_KEY,
+            'X-Internal-Api-Key': process.env.PAYMENT_GATEWAY_API_KEY,
           },
         }
       );

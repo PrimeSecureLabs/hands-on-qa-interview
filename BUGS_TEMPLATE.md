@@ -292,43 +292,61 @@ A ausência de validação compromete a qualidade dos dados e a segurança do si
 
 ---
 
-## Bug #6: [TÍTULO DO BUG]
+## Bug #6: Timeout Irrealista e Vazamento de Segredo no PaymentGatewayService
 
-**Severidade**: [Alta/Média/Baixa]
-**Categoria**: [Segurança/Performance/Funcional/UX]
+**Severidade**: Alta
+**Categoria**: Segurança/Performance
 **Status**: Aberto
 
 ### Descrição
 
-[Descreva o bug detalhadamente]
+O PaymentGatewayService utiliza um timeout irrealista de 100ms e expõe a SECRET_KEY da aplicação nos headers das requisições para o serviço externo de pagamento.
 
 ### Localização
 
-- **Arquivo**: `src/caminho/arquivo.ts`
+- **Arquivo**: `src/services/paymentGatewayService.ts`
 - **Função/Linha**: [Se aplicável]
 
 ### Passos para Reproduzir
 
-1. [Passo 1]
-2. [Passo 2]
-3. [Passo 3]
+1. pnpm run dev
+2. Simular um atraso de rede no endpoint externo de pagamento
+3. Chamar a funcionalidade de cadastro de cliente com afiliado
+4. Observar falha por timeout e capturar os headers da requisição
 
 ### Resultado Esperado
 
-[O que deveria acontecer]
+- Timeout configurado de forma realista (5-30 segundos)
+- Uso de chave API específica para o serviço de pagamento, não a SECRET_KEY da aplicação
 
 ### Resultado Atual
 
-[O que está acontecendo]
+- Timeout de 100ms causa falhas constantes em chamadas externas
+- SECRET_KEY é exposta no header X-Internal-Secret
+- Requisições falham mesmo em condições normais de rede
 
 ### Impacto
 
-[Como isso afeta o usuário/sistema]
+- Falhas constantes no processo de registro de afiliados
+- Vazamento de segredo crítico que compromete toda a segurança JWT da aplicação
+- Experiência do usuário degradada devido a timeouts frequentes
 
 ### Correção Sugerida
 
 ```typescript
-// Código sugerido para correção
+const DEFAULT_TIMEOUT = Number(process.env.PAYMENT_TIMEOUT_MS) || 10000;
+
+const response = await axios.post(
+  `${this.baseURL}/api/customers/register`,
+  data,
+  {
+    timeout: DEFAULT_TIMEOUT,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Api-Key': process.env.PAYMENT_GATEWAY_API_KEY,
+    },
+  }
+);
 ```
 
 ---
