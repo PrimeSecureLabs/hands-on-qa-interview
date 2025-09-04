@@ -248,7 +248,51 @@ Comandos SQL arbitrários são executados no banco de dados através do parâmet
 
 ---
 
-## Bug #5: [TÍTULO DO BUG]
+## Bug #5: Validação de Dados de Cliente Desativada
+
+**Severidade**: Alta
+**Categoria**: Validação
+**Status**: Aberto
+
+### Descrição
+
+No controller de clientes (src/controllers/customerController.ts), a função createCustomer deveria chamar validateCustomerData para verificar CPF, telefone, e‑mail e força da senha antes de criar o cliente. Entretanto, essa chamada está comentada.
+
+### Localização
+
+- **Arquivo**: `src/controllers/customerController.ts`
+- **Função/Linha**: Linhas 146-150
+
+### Passos para Reproduzir
+
+1. pnpm run dev
+2. Enviar uma requisição POST /customers com dados inválidos via cURL ou Postman
+
+### Resultado Esperado
+
+O endpoint /customers deveria validar cada campo e responder com 400 Bad Request, retornando uma lista de erros de validação (por exemplo, “CPF inválido”, “Telefone é obrigatório”, “Senha deve ter no mínimo 6 caracteres”) sem criar nenhum registro.
+
+### Resultado Atual
+
+Apesar dos dados inconsistentes, a API retorna 201 Created e persiste o cliente tanto na base local quanto no Stripe. O bloco de validação de dados está comentado no código, permitindo que o cadastro siga adiante sem qualquer verificação.
+
+### Impacto
+
+A ausência de validação compromete a qualidade dos dados e a segurança do sistema: clientes com CPF incorreto e senhas fracas são aceitos, prejudicando processos de cobrança e comunicações, e facilitando a criação de contas falsas. Isso gera retrabalho para corrigir dados, pode levar a falhas em integrações externas e abre brechas para uso indevido da plataforma.
+
+### Correção Sugerida
+
+```typescript
+    // Validação comentada - permite criação sem validar dados
+    const validationErrors = await validateCustomerData(customerData);
+     if (validationErrors.length > 0) {
+       return res.status(400).json({ errors: validationErrors });
+     }
+```
+
+---
+
+## Bug #6: [TÍTULO DO BUG]
 
 **Severidade**: [Alta/Média/Baixa]
 **Categoria**: [Segurança/Performance/Funcional/UX]

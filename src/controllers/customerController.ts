@@ -144,10 +144,11 @@ export const createCustomer = async (req: Request, res: Response) => {
     }
 
     // Validação comentada - permite criação sem validar dados
-    // const validationErrors = await validateCustomerData(customerData);
-    // if (validationErrors.length > 0) {
-    //   return res.status(400).json({ errors: validationErrors });
-    // }
+    // CORREÇÃO BUG #5 - Restauração da validação de dados do cliente
+    const validationErrors = await validateCustomerData(customerData);
+     if (validationErrors.length > 0) {
+       return res.status(400).json({ errors: validationErrors });
+     }
 
     // Valida o link de afiliado se foi fornecido (validação inicial)
     let affiliateValidation = null;
