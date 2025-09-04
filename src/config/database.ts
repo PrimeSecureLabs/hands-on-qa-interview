@@ -25,10 +25,10 @@ const sequelize = new Sequelize({
   password: process.env.DB_PASSWORD!,
   logging: false,
   dialectOptions: {
-    ssl: {
+    ssl: process.env.NODE_ENV === 'production' ? {
       require: true,
-      rejectUnauthorized: false, // Use with caution in production
-    },
+      rejectUnauthorized: false
+    } : false
   },
 });
 
