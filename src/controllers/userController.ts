@@ -489,8 +489,12 @@ export const getUsers = async (req: Request, res: Response) => {
 
 export const getUserById = async (req: Request, res: Response) => {
   const userId = req.params.id;
-  const query = `SELECT * FROM users WHERE id = ${userId}`;
-  const results = await sequelize.query(query, { type: QueryTypes.SELECT });
+  // CORREÇÃO BUG 4: Usar parâmetro preparado para prevenir SQL Injection
+  const query = `SELECT * FROM users WHERE id = :userId`;
+  const results = await sequelize.query(query, { 
+    type: QueryTypes.SELECT,
+    replacements: { userId }
+  });
 
   if (!results || results.length === 0) {
     return res.status(404).json({ error: 'User not found' });

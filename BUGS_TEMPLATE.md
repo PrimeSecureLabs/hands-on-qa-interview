@@ -200,43 +200,50 @@ app.use(cors({
 
 ---
 
-## Bug #4: [TÍTULO DO BUG]
+## Bug #4: Vulnerabilidade de SQL Injection no Endpoint de Usuário
 
-**Severidade**: [Alta/Média/Baixa]
-**Categoria**: [Segurança/Performance/Funcional/UX]
+**Severidade**: Alta
+**Categoria**: Segurança
 **Status**: Aberto
 
 ### Descrição
 
-[Descreva o bug detalhadamente]
+O endpoint getUserById utiliza concatenação direta do parâmetro userId na query SQL, permitindo ataques de SQL Injection através do ID do usuário na URL.
 
 ### Localização
 
-- **Arquivo**: `src/caminho/arquivo.ts`
-- **Função/Linha**: [Se aplicável]
+- **Arquivo**: `src/controllers/userController.ts`
+- **Função/Linha**: getUserById (linhas 492-493)
 
 ### Passos para Reproduzir
 
-1. [Passo 1]
-2. [Passo 2]
-3. [Passo 3]
+1. Executar migrações para criar usuários de teste: pnpm run migrate
+2. Logar com usuário autorizado e obter token JWT válido
+3. Fazer requisição GET para: http://localhost:3000/users/1 UNION SELECT * FROM passwords incluindo o token no header Authorization
 
 ### Resultado Esperado
 
-[O que deveria acontecer]
+O parâmetro userId deveria ser sanitizado e usado como parâmetro preparado (parameterized query) para prevenir SQL Injection.
 
 ### Resultado Atual
 
-[O que está acontecendo]
+Comandos SQL arbitrários são executados no banco de dados através do parâmetro ID.
 
 ### Impacto
 
-[Como isso afeta o usuário/sistema]
+- Comprometimento completo do banco de dados
+- Vazamento de todos os dados sensíveis (usuários, senhas, informações pessoais)
+- Possibilidade de exclusão de tabelas inteiras
+- Execução de comandos arbitrários no banco
 
 ### Correção Sugerida
 
 ```typescript
-// Código sugerido para correção
+  const query = `SELECT * FROM users WHERE id = :userId`;
+  const results = await sequelize.query(query, { 
+    type: QueryTypes.SELECT,
+    replacements: { userId }
+  });
 ```
 
 ---
