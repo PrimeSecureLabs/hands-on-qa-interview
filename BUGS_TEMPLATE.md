@@ -401,6 +401,56 @@ const description = req.body.description?.trim() || '';
 
 ---
 
+## Bug #8: Ausência de Rate Limiting em Endpoints Críticos
+
+**Severidade**: Média
+**Categoria**: Segurança
+**Status**: Aberto
+
+### Descrição
+
+Os endpoints de autenticação (login) não possuem rate limiting, permitindo ataques de força bruta contra contas de usuário.
+
+### Localização
+
+- **Arquivo**: `src/controllers/userController.ts` e `src/controllers/customerController.ts`
+- **Função/Linha**: loginUser e loginCustomer
+
+### Passos para Reproduzir
+
+1. Utilize ferramentas como curl ou Postman
+2. Execute múltiplas requisições POST consecutivas para /api/auth/login
+
+### Resultado Esperado
+
+Um sistema de rate limiting que proteja os endpoints de autenticação contra ataques de força bruta, limitando tentativas consecutivas de acesso e retornando respostas adequadas quando os limites forem excedidos.
+
+### Resultado Atual
+
+Tentativas ilimitadas de login permitidas, facilitando ataques de força bruta.
+
+### Impacto
+
+Vulnerabilidade a ataques de força bruta que podem comprometer contas de usuário.
+
+### Correção Sugerida
+
+Necessário instalar a denpedência `express-rate-limit`
+
+```typescript
+import rateLimit from 'express-rate-limit';
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 5, // máximo 5 tentativas
+  message: 'Muitas tentativas de login. Tente novamente em 15 minutos.'
+});
+
+// Aplicar nos endpoints de login
+```
+
+---
+
 ## Melhorias Gerais Sugeridas
 
 ### Segurança
