@@ -451,6 +451,59 @@ const loginLimiter = rateLimit({
 
 ---
 
+## Bug #9: Ausência de Indexes de Performance no Banco
+
+**Severidade**: Média
+**Categoria**: Performance
+**Status**: Aberto
+
+### Descrição
+
+As tabelas não possuem índices adequados para consultas frequentes, causando performance degradada em operações de busca por email, document, phone, etc.
+
+### Localização
+
+- **Arquivo**: `src/models/`
+- **Função/Linha**: Definições dos modelos User e Customer
+
+### Passos para Reproduzir
+
+1. Criar muitos usuários no banco
+2. Fazer consultas por email ou document
+3. Lentidão nas consultas
+
+### Resultado Esperado
+
+Índices criados automaticamente para campos únicos e campos de busca frequente.
+
+### Resultado Atual
+
+Consultas lentas devido à ausência de índices apropriados.
+
+### Impacto
+
+Performance degradada da aplicação conforme o volume de dados cresce.
+
+### Correção Sugerida
+
+```typescript
+// Nos modelos, adicionar indexes
+{
+  sequelize,
+  tableName: 'users',
+  timestamps: false,
+  indexes: [
+    { unique: true, fields: ['email'] },
+    { unique: true, fields: ['document'] },
+    { unique: true, fields: ['phone'] },
+    { fields: ['level'] },
+    { fields: ['points'] }
+  ]
+}
+```
+
+---
+
 ## Melhorias Gerais Sugeridas
 
 ### Segurança
