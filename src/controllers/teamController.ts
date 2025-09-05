@@ -18,22 +18,35 @@ const generateInviteToken = () => crypto.randomBytes(8).toString('hex');
 // Criar um novo time (apenas admin)
 export const createTeam = async (req: Request, res: Response) => {
   try {
+    // ==================================================
+    // Correção bug 7: Sanitização e validação de campos
+    // Validação de campos obrigatórios
+    if (!req.body.name || req.body.name.trim().length < 3) {
+      return res.status(400).json({ error: 'Nome da equipe é obrigatório (mín. 3 caracteres)' });
+    }
+
+    // Sanitização
+    const name = req.body.name.trim();
+    const description = req.body.description?.trim() || '';
+
     const userId = (req as any).user?.id;
     const userRole = await UserRole.findOne({ where: { user_id: userId } });
     const role = await Role.findByPk(userRole?.role_id);
+
     if (!role || role.name !== 'Admin') {
       return res.status(403).json({ error: 'Apenas administradores podem criar times.' });
     }
+
     // Verifica se já existe um time para esse owner
     const existingTeam = await Team.findOne({ where: { owner_user_id: userId } });
     if (existingTeam) {
       return res.status(400).json({ error: 'Usuário já é owner de um time.' });
     }
-    const { name, description } = req.body;
+
     const team = await Team.create({
       owner_user_id: userId,
-      name,
-      description,
+      name, // Usando a variável sanitizada
+      description, // Usando a variável sanitizada
       created_at: new Date()
     });
 
@@ -61,6 +74,7 @@ export const createTeam = async (req: Request, res: Response) => {
       role_id: role.id,
       joined_at: new Date()
     });
+    
     res.status(201).json(team);
   } catch (err) {
     console.error('Erro ao criar time:', err);
@@ -76,9 +90,28 @@ export const getAllowedRoles = async (req: Request, res: Response) => {
 
 // Convidar membro para o time
 export const inviteMember = async (req: Request, res: Response) => {
+  // ==================================================
+  // Correção bug 7: Sanitização e validação de campos
+  // Validação de campos obrigatórios
+  if (!req.body.team_id) {
+    return res.status(400).json({ error: 'ID do time é obrigatório' });
+  }
+  
+  if (!req.body.email || !isValidEmail(req.body.email)) {
+    return res.status(400).json({ error: 'Email é obrigatório e deve ser válido' });
+  }
+  
+  if (!req.body.role_id) {
+    return res.status(400).json({ error: 'ID do cargo é obrigatório' });
+  }
+
+  // Sanitização
+  const team_id = req.body.team_id;
+  const email = req.body.email.trim().toLowerCase();
+  const role_id = req.body.role_id;
+
   const userId = (req as any).user?.id;
   const userEmail = (req as any).user?.email;
-  const { team_id, email, role_id } = req.body;
 
   // Busque o member_id do usuário autenticado
   const userMember = await Member.findOne({ where: { email: userEmail } });
@@ -133,8 +166,15 @@ export const inviteMember = async (req: Request, res: Response) => {
     status: 'pending',
     created_at: new Date()
   });
+  
   res.status(201).json({ invitation });
 };
+
+// Função auxiliar para validar email
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
 
 // Aceitar convite
 export const acceptInvitation = async (req: Request, res: Response) => {
