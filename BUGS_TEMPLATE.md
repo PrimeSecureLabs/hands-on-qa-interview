@@ -504,6 +504,68 @@ Performance degradada da aplicação conforme o volume de dados cresce.
 
 ---
 
+## Bug #10: Ausência de Validação de Autorização em Operações Críticas
+
+**Severidade**: Alta
+**Categoria**: Segurança
+**Status**: Aberto
+
+### Descrição
+
+Alguns endpoints não verificam adequadamente as permissões do usuário, permitindo que usuários acessem ou modifiquem recursos de outros usuários.
+
+### Localização
+
+- **Arquivo**: `src/controllers/teamController.ts`
+- **Função/Linha**: listTeamMembers
+
+### Passos para Reproduzir
+
+1. Criar usuário comum
+2. Fazer login e obter token
+3. Tentar acessar GET /teams/1/members de uma equipe que não pertence
+
+### Resultado Esperado
+
+Verificação se o usuário tem permissão para ver membros da equipe específica.
+
+### Resultado Atual
+
+Usuário pode ver membros de equipes às quais não pertence.
+
+### Impacto
+
+- Vazamento de informações de membros de equipes
+- Violação de privacidade
+- Possível escalação de privilégios
+
+### Correção Sugerida
+
+```typescript
+export const listTeamMembers = async (req: Request, res: Response) => {
+  const { team_id } = req.params;
+  const userId = (req as any).user?.id;
+  
+  // Verificar se o usuário é membro da equipe
+  const userMember = await Member.findOne({ where: { email: (req as any).user?.email } });
+  if (!userMember) {
+    return res.status(403).json({ error: 'Acesso negado' });
+  }
+  
+  const teamMember = await TeamMember.findOne({ 
+    where: { team_id, member_id: userMember.id } 
+  });
+  
+  if (!teamMember) {
+    return res.status(403).json({ error: 'Você não é membro desta equipe' });
+  }
+  
+  // Continuar com a listagem...
+};
+```
+
+---
+
 ## Melhorias Gerais Sugeridas
 
 ### Segurança
