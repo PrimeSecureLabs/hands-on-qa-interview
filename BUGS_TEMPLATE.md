@@ -351,6 +351,56 @@ const response = await axios.post(
 
 ---
 
+## Bug #7: Falta de Validação de Entrada em Team Controller
+
+**Severidade**: Alta
+**Categoria**: Segurança
+**Status**: Aberto
+
+### Descrição
+
+O controller de equipes não valida dados de entrada nos endpoints de criação de equipe e convite de membros, permitindo criação de equipes com dados inválidos ou maliciosos.
+
+### Localização
+
+- **Arquivo**: `src/controllers/teamController.ts`
+- **Função/Linha**: createTeam e inviteMember
+
+### Passos para Reproduzir
+
+1. Fazer login com usuário admin
+2. Enviar POST /teams com payload vazio ou com dados inválidos
+3. Observar que a equipe é criada sem validação
+
+### Resultado Esperado
+
+Validação de campos obrigatórios e sanitização de dados de entrada.
+
+### Resultado Atual
+
+Equipes são criadas com dados inválidos, podendo causar problemas de integridade.
+
+### Impacto
+
+- Criação de registros inválidos no banco
+- Possível exploração por dados maliciosos
+- Inconsistência de dados
+
+### Correção Sugerida
+
+```typescript
+// No início de createTeam
+if (!req.body.name || req.body.name.trim().length < 3) {
+  return res.status(400).json({ error: 'Nome da equipe é obrigatório (mín. 3 caracteres)' });
+}
+
+// Sanitização
+const name = req.body.name.trim();
+const description = req.body.description?.trim() || '';
+```
+
+---
+
 ## Melhorias Gerais Sugeridas
 
 ### Segurança
