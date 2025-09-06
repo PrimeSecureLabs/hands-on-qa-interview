@@ -1,23 +1,27 @@
 import { defineConfig } from 'vitest/config';
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Carrega as variáveis do .env.test
+dotenv.config({ path: path.resolve(__dirname, '.env.test') });
 
 export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    setupFiles: ['./src/__tests__/setup.ts'],
-    env: {
-      NODE_ENV: 'test',
-      STRIPE_SECRET_KEY: 'sk_test_fake_key_for_testing_only',
-      STRIPE_WEBHOOK_SECRET: 'whsec_fake_webhook_secret_for_testing_only',
-      PORT: '3001',
-      DB_HOST: 'localhost',
-      DB_PORT: '5432',
-      DB_NAME: 'test_db',
-      DB_USER: 'test_user',
-      DB_PASSWORD: 'test_password',
-      SECRET_KEY: 'test_secret_key_for_testing_only',
-      PAYMENT_GATEWAY_URL: 'http://localhost:3005',
-    },
+    setupFiles: ['./src/__tests__/setup/vitest.setup.ts'], // Corrigido o caminho
     pool: 'forks',
+    testTimeout: 10000, // 10 segundos para testes de integração
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'src/__tests__/',
+        '*.config.*',
+        'src/migrations/',
+        'src/seeders/'
+      ]
+    }
   },
 });

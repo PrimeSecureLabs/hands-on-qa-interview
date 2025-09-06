@@ -7,9 +7,6 @@
     "dev": "nodemon --watch src --ext ts --exec ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
     "migrate": "sequelize-cli db:migrate --config src/config/sequelize-cli.js --migrations-path src/migrations",
     "migrate:undo": "sequelize-cli db:migrate:undo --config src/config/sequelize-cli.js --migrations-path src/migrations",
     "migration:create": "sequelize-cli migration:generate --config src/config/sequelize-cli.js --migrations-path src/migrations --name",
@@ -23,7 +20,17 @@
     "docker:build": "docker build -t svc-central .",
     "docker:run": "docker run -p 3000:3000 --env-file .env svc-central",
     "docker:compose:up": "docker-compose up --build",
-    "docker:compose:down": "docker-compose down"
+    "docker:compose:down": "docker-compose down",
+
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+
+    "test:db:create": "docker exec hands-on-qa-interview_db_1 psql -U postgres -c 'CREATE DATABASE central_svc_test;' || echo 'Database might already exist'",
+    "test:db:drop": "docker exec hands-on-qa-interview_db_1 psql -U postgres -c 'DROP DATABASE IF EXISTS central_svc_test;'",
+    "test:setup": "pnpm run test:db:create",
+    "test:integration": "NODE_ENV=test vitest run src/__tests__/integration",
+    "test:unit": "NODE_ENV=test vitest run src/__tests__/unit"
   },
   "keywords": [],
   "author": "Thezehel & Khai Dreams",
