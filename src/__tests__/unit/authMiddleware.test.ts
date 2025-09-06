@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { authMiddleware } from '../middlewares/authMiddleware';
+import { authMiddleware } from '../../middlewares/authMiddleware';
 import jwt from 'jsonwebtoken';
 
 // Mocks
@@ -59,7 +59,7 @@ describe('Auth Middleware', () => {
       const verifyMock = vi.mocked(jwt.verify);
       verifyMock.mockReturnValue({ id: 1, email: 'user@test.com' } as any);
       // Mocka UserSession para retornar uma sessão ativa
-      const UserSessionModule: any = await import('../models/user/UserSession');
+      const UserSessionModule: any = await import('../../models/user/UserSession');
       UserSessionModule.UserSession.findOne = vi.fn().mockResolvedValue({
         id: 1,
         user_id: 1,

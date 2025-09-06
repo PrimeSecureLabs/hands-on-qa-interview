@@ -9,9 +9,14 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    setupFiles: ['./src/__tests__/setup/vitest.setup.ts'], // Corrigido o caminho
+    setupFiles: ['./src/__tests__/setup/vitest.setup.ts'],
     pool: 'forks',
-    testTimeout: 10000, // 10 segundos para testes de integração
+    poolOptions: {
+      forks: {
+        singleFork: true  // Força execução sequencial
+      }
+    },
+    testTimeout: 10000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

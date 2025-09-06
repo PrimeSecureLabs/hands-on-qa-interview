@@ -2,6 +2,15 @@ import { Sequelize } from 'sequelize';
 import { initUser } from '../models/user/User';
 import { initCustomer } from '../models/customer/Customer';
 import { initCustomerLevel } from '../models/customer/CustomerLevels';
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Carrega o .env.test se estiver em modo teste
+if (process.env.NODE_ENV === 'test') {
+  dotenv.config({ path: path.resolve(process.cwd(), '.env.test') });
+} else {
+  dotenv.config();
+}
 
 const requiredEnvVars = [
   'DB_HOST',

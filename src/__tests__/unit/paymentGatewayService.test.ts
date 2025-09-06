@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { paymentGatewayService } from '../services/paymentGatewayService';
+import { paymentGatewayService } from '../../services/paymentGatewayService';
 import axios from 'axios';
 
 // Mock do axios de forma simples
